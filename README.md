@@ -1,36 +1,52 @@
 # Ayman’s Library — My Office
 
-A gradual rebuild of My Library, hosted on GitHub Pages. The approved glass portal opens the Library and Writing Workspace. Private files remain in Google Drive; no user data, OAuth credentials or access tokens are bundled in the repository.
+Static GitHub Pages portal, Library and Writing Workspace. Durable user content stays in Google Drive. The public repository contains no private catalogue, account password, client secret or access token.
 
-## Current release: book uploads v0.7
+## Release v0.8 — connected workspace
 
-**Add book** in My Books uploads one PDF or EPUB (up to 200 MB) with title, author and category to **My Office Books** in Google Drive. This app-created folder is automatically included on refresh/reconnect; the existing Library_Metadata.json is not changed. Metadata travels in the new file’s description and is normalized into cards on reload. Enable uploads uses the same `drive.readonly` + `drive.file` authorization already used for research saving.
+- **Books:** load existing library metadata and enabled additional folders; upload PDF/EPUB up to 200 MB into My Office Books. Edit title, author, category, tags and favorites through separate catalogue records.
+- **Reader:** bundled PDF.js and EPUB.js provide PDF page navigation, zoom, contents, extracted page text, and EPUB section navigation. Save bookmarks, reading status and position, including EPUB CFI. Focus mode hides secondary UI. Scanned PDFs require an existing text layer for quotation extraction; OCR is not included.
+- **Notes:** import existing notes read-only; create editable copies or new notes, associate source/page, tag, search, edit and archive/restore.
+- **Projects:** link books, notes, ideas and tray items; browse Sources, Notes, Ideas and Writing tabs.
+- **Research Tray:** collect a source or note, edit material, order it and move through To Read / Reading / Collected.
+- **Ideas Board:** create and edit ideas, link ideas/notes/sources, drag positions and save them to Drive.
+- **Collections / Tags:** create named collections, select books and browse categories or tag matches.
+- **Reading / Insights:** display actual saved positions, bookmarks, collection counts and recorded reading days. Opening a book records activity when saving is enabled; this is not a duration tracker.
+- **Writing:** explicit save/reopen of workspace-created native Google Docs; paragraphs, headings, bold/italic/underline, bullets and direction. Receive selected research as a new draft or insert into a chosen draft with a source reference in the text. TXT/Markdown/DOCX import creates a new draft; DOCX import is text only. Export current draft to TXT/Markdown; PDF/DOCX export uses the saved Google document. Pins and scratchpad have a separate explicit Save scratchpad action.
+- **Layout:** shared System/Light/Dark appearance; glass or floating details panel, optional mouse-edge reveal and auto-hide; focus modes.
 
-Uploads validate extension/header/size, warn about duplicate title + format, and use resumable Drive sessions with preallocated file IDs. Check & resume queries status before sending remaining bytes; IDs stay fixed to prevent an uncertain retry from creating a second file. Tokens, file objects and upload-session URLs stay in page memory. Keep the page open while uploading. A reload ends local resume state; check Drive before choosing the same file again. EPUB validation checks the required initial mimetype record; it does not audit every publication component.
+Signed-out Library screens and starter writing documents are labelled samples. Connect Google to access your own content. No universal full-library content index, OCR, text-to-speech, parallel reader, automatic cover lookup or desktop installation is included.
 
-## Research connection v0.6
+## Data and revision handling
 
-- **Books:** authorize `drive.readonly`, locate My Library or the selected folder, read Library_Metadata.json and enabled additional libraries, deduplicate sources, and open PDFs in the browser viewer. Other formats open in Drive. Original files, metadata, favorites and reading positions are not modified.
-- **Notes:** display comments, research notes, reflections and quotations from existing metadata, plus material records from the original research bridge. Original notes open read-only with a Create editable copy action. New notes support manual save/edit, source and page links, Arabic/English text, search and progressive listing.
-- **Projects:** display existing research-bridge projects, create projects, edit title/description and link books/notes. Project tabs show real linked sources and notes, including unavailable-item messages. Writing opens the separate writing workspace; it does not automatically copy project content.
-- **Enable saving:** explicitly reconnect with `drive.readonly` plus `drive.file`. Both permissions use the same session/account. Saves append separate immutable files with the existing `aymanResearchBridge=event-v1` public custom property and JSON description format. This implementation never PATCHes, deletes or changes sharing on an original research/source file. Public custom properties are visible to applications authorized for the file; they do not make a file publicly shared.
-- **Revision handling:** check the current heads before saving, reject stale edits, retain concurrent branches and flag conflicts. No automatic retry after uncertain saves. If a network error occurs, refresh and check the saved record before retrying.
-- **Writer v0.5:** explicit Save to Drive creates/updates native Google documents created by this workspace. Open lists those documents. Supports basic paragraphs, headings, bold/italic/underline, bullet lists and RTL/LTR; complex documents are rejected instead of flattened. Saves use revision checks. Drafts/scratchpad are temporary until explicitly saved.
+Reading and catalogue settings, research, projects and collections append immutable event files compatible with `aymanResearchBridge=event-v1`. Existing source files and Library_Metadata.json are preserved. Source uploads use app-created files with their metadata in Drive descriptions. My Office Books is automatically included by this site; the older Apps Script library requires its own configuration to discover this folder.
 
-Unconnected Research Tray, Ideas Board and Insights are identified as pending in connected mode. Signed-out interfaces contain clearly labelled samples. Import/export dialogs, sample pinning and other preview-only tools are not production file operations. System/Light/Dark appearance is shared across the portal pages.
+Each research save checks current heads. Stale saves are rejected; concurrent versions remain in Drive. Review conflicts and choose a version to create a resolving revision. Archive is reversible and never deletes an original file. Writer documents use Google Docs required-revision guards; scratchpad/pin events are append-only and reject stale/conflicting revisions. Advanced Google document structures are rejected for editing here; use Google Docs to preserve tables, images, links, multiple tabs, suggestions, headers and footnotes.
+
+Upload validation checks extension, header and size (not every EPUB component). Resumable uploads retain a preallocated ID and query status before resending remaining bytes. Page reload clears local resume state; inspect Drive before uploading again after an uncertain outcome. Do not automatically retry an uncertain create/save.
 
 ## Connection and privacy
 
-Configure a Web OAuth client for the website origin in Google Cloud, enable Drive API (and Docs API for writing), and configure the test account/scopes. See [DRIVE_SETUP.md](DRIVE_SETUP.md). The owner has already configured these and confirmed real library reading and native document save/reopen in Arabic and English on 21 November 2026.
+See [DRIVE_SETUP.md](DRIVE_SETUP.md). Library reading requests `drive.readonly`; saving/uploading adds `drive.file`. Writer requests `drive.file`. No additional scope is needed for v0.8. Folder selection is an application filter, not a folder-scoped OAuth grant. Separate pages reconnect on demand.
 
-Only public connection settings (client ID and optional folder ID) and appearance preferences are stored in localStorage. Access tokens, catalogues, research data and drafts stay in page memory. Reconnect after a page reload. Disconnect/expiry clears connected research and catalogue data. Disconnect drops the page session; revoking the app grant is a separate Google Account action. Folder selection is an app filter, not a folder-scoped OAuth grant. Research bridge discovery searches the authorized account's owned research event files across Drive.
+Public OAuth client/folder settings and appearance/layout preferences are stored in localStorage. Access tokens, loaded books and drafts stay in page memory. A short pending research handoff uses same-origin sessionStorage until inserted. Durable data is in Drive. Unsaved drafts and scratchpad changes can be lost when leaving; save explicitly and wait for success. Disconnect/expiry clears the connected Library session; revoking the app grant is a separate Google Account operation. The site does not change file sharing.
 
 ## Validation
 
-Run `node drive.test.cjs`, `node research.test.cjs`, `node writing-cloud.test.cjs` and `node upload.test.cjs`. Upload tests cover file validation, size limits, metadata persistence, managed folders, duplicate guarding and interrupted-session resumption with a fixed ID.
+Run from the repository root:
 
-Synthetic tests cover metadata imports/deduplication, folder pagination, readonly write rejection, Arabic, immutable save/reload/edit, stale revisions, concurrent branches, project links, token lifetime, formatting and unsupported documents. Browser checks use local synthetic OAuth/Drive transport and exercise note save, source linking and project tabs; these fixtures are not published. Real Notes/Projects authorization, note creation/edit, project links and reopening after page reload were verified in the owner’s browser session. Upload real-account verification is recorded separately from synthetic checks.
+```sh
+node drive.test.cjs
+node research.test.cjs
+node upload.test.cjs
+node writing-cloud.test.cjs
+node library-complete.test.cjs
+```
 
-## Hosting
+These cover normalization, pagination, deduplication, read-only rejection, memory-only tokens, late authorization, upload validation/resumption, Arabic/UTF-16 text, immutable revisions, stale/concurrent conflicts, project links, catalogue/bookmark bounds, archive/restore, and writer formatting/scratchpad/pin histories. Browser QA uses synthetic transport fixtures locally; fixtures are excluded from publication. A release QA record distinguishes local tests from live-account checks.
 
-Static HTML/CSS/JavaScript, no build required. Serve the repository root or use GitHub Pages main/root. `index.html` is the portal, `library.html` the Library and `writing.html` the writer. `drive-model.js` and `research-model.js` adapt existing data; `drive.js` handles authorized API calls; `research-ui.js` renders research controls. Never add a client secret, token, downloaded metadata, private fixture or personal file to this public repository.
+## Hosting and dependencies
+
+Serve this repository root with GitHub Pages main/root. Portal: index.html; Library: library.html; writer: writing.html. No build or server is required. Library models adapt Drive data; drive.js handles API access, reader.js the reader, research-ui.js and library-complete.js the connected views, writing-cloud.js native Docs and writing-complete.js import/export and handoff.
+
+Reader/import assets are pinned and served from the repository root: PDF.js 6.5.438, EPUB.js 0.3.93, JSZip 3.10.1 and Mammoth 1.11.0. See [THIRD_PARTY_LICENSES.txt](THIRD_PARTY_LICENSES.txt). PDF active content/XFA is disabled; EPUB scripts/popups are disabled; DOCX import uses raw text escaped before display. Original documents are not sent to a parsing service.

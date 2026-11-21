@@ -1,63 +1,36 @@
-# Google Drive connection setup
+# Google connection setup — v0.8
 
-This is a one-time owner setup for the read-only Library connection. Do not publish Drive data, Google account passwords, access tokens or client secrets in the repository. A browser OAuth client ID is public and may be entered in the Library's Connection settings.
+The existing My Office Web client can be reused. This release requires no new scopes, full-Drive write permission, billing change or public sharing.
 
-1. In Google Cloud Console, create or select the project that will own this connection.
-2. Enable **Google Drive API** in that project. No paid service or billing upgrade is required by this implementation; do not add one simply to configure it.
-3. Configure Google Auth Platform branding and audience. For a personal account, an External app in Testing with the intended account added as a test user can be used for initial testing. Review any verification requirements Google displays for the chosen scope before wider distribution.
-4. Declare `https://www.googleapis.com/auth/drive.readonly` as the requested data-access scope. No write scope is used at this stage. The Google permission covers the account's accessible files; the application only lists the chosen library folders.
-5. Create an OAuth client of type **Web application**. Add the Authorized JavaScript origin `https://mylbrry.github.io` (no `/myoffice/` path). The token model uses the Google popup; this code does not use a redirect callback URL.
-6. For local testing only, an owner may additionally authorize `http://localhost:4173` or `http://127.0.0.1:4173` if Google accepts that origin. Do not use either as the deployed website origin.
-7. Copy only the client ID ending in `.apps.googleusercontent.com`. Do not copy the client secret into this website or send it in chat.
-8. Open the deployed Library. Click **Connect Drive**, enter the client ID, and optionally enter the intended Library folder URL/ID. Leaving it empty discovers an accessible folder named exactly `My Library`; if several match, select the intended folder explicitly.
-9. Click **Connect with Google** and authorize the intended account. The account must already have read access to the library folders and files. No public sharing is needed. Stop and inspect unexpected permissions; the only requested scope is Drive read-only.
-10. Verify book counts, the additional-folder warning if any, category filters, and two real source selections. Load a PDF in the reader and compare it with the original. Verify that metadata and source modified times remain unchanged. Test Disconnect and reconnect.
+1. Use the Google Cloud project containing the Web application OAuth client. Enable Google Drive API and Google Docs API.
+2. In Google Auth Platform, complete branding and audience. If the app is in Testing, add the intended Google account as a test user. Follow any verification requirements Google displays before broader distribution.
+3. Declare `https://www.googleapis.com/auth/drive.readonly` for Library reading and `https://www.googleapis.com/auth/drive.file` for app-created uploads, research and writing documents.
+4. Set the Authorized JavaScript origin to `https://mylbrry.github.io` without a path. The popup token model used here has no redirect callback URL.
+5. Enter only the public client ID ending in `.apps.googleusercontent.com` in the site's connection settings. Never enter a client secret or password into this site.
+6. Open Library → Connect Drive. Optionally enter a folder URL/ID; blank discovers My Library. Use the account that can access the books. The chosen folder limits application listing; OAuth reading permission is broader than that folder.
+7. Enable saving when required and reconnect with the same account. Both Drive scopes must be granted. Google popup closure can be normal after successful authorization; check the site's connected state.
+8. Writing Workspace → Connect Google uses the same client ID and `drive.file`. It lists only native Google documents created by this workspace.
 
-If the browser blocks the Google popup, allow it for this site and retry. An expired token requires a user-triggered reconnect. The connection does not store refresh tokens. If Cloud reports origin mismatch, check the exact Authorized JavaScript origin. If the Drive API is disabled, enable it in the same project that owns the client ID.
+## Operation
 
-The first live account authorization and private PDF test are pending until the Google Cloud setup is completed.
+- PDF/EPUB upload creates files in My Office Books, discovered automatically on reconnect. The legacy Library_Metadata.json is not modified.
+- Reading positions/bookmarks, catalogue edits, notes, ideas, projects and collections use separate immutable Drive event records. Archive/restore changes the workspace view, never deletes the source.
+- Open a conflict from Research Tray / Ideas Board → Conflicts, review retained versions and choose which to use. A new revision resolves the branch; old records remain.
+- Library refresh reloads saved records. Expired sessions require reconnecting; tokens are never persisted.
+- Writer Save to Drive explicitly saves supported draft content. Save scratchpad separately to retain document notes and pins. Unsaved page content is temporary. PDF/Word exports require the current version to be saved.
+- DOCX import is text only and imports into a new draft. Complex native Google documents are rejected for editing here to preserve unsupported structures.
+- A failed or uncertain save must be checked in Drive/Refresh before retrying. Stale revisions require reopening or saving a new document; no blind overwrite is used.
 
-Official references:
-- https://developers.google.com/identity/oauth2/web/guides/get-google-api-clientid
-- https://developers.google.com/identity/oauth2/web/guides/use-token-model
-- https://developers.google.com/workspace/drive/api/guides/api-specific-auth
-- https://developers.google.com/workspace/drive/api/guides/search-files
+## Acceptance checks
 
-## Writing Workspace connection (v0.5)
+Use disposable QA records: upload a PDF and EPUB, verify titles after reconnect, navigate and bookmark both, change catalogue tags, create/link/archive/restore a note/idea/project/collection, send research to a draft, save/reopen text and formatting, save/reopen scratchpad and pin, import TXT/MD/DOCX, and export TXT/MD/PDF/DOCX. Verify original file and legacy metadata remain intact. Browser-managed download handling varies; use the browser's downloads list.
 
-The Library remains read-only. The Writing Workspace uses a separate, page-memory token requesting only `https://www.googleapis.com/auth/drive.file`.
+For origin mismatch, compare the exact authorized origin with the website. For a blocked popup, allow popups for this site. For disabled API errors, enable the named API in the client-owning project. No refresh token is stored; connection after page reload is intentional.
 
-Owner setup, using the same **My Office Web** client:
-1. Enable **Google Docs API** in the same Google Cloud project. Keep Drive API enabled.
-2. Add `https://www.googleapis.com/auth/drive.file` in Google Auth Platform → Data Access, retaining the existing read-only scope for the Library.
-3. Open Writing Workspace → Connect Google. The existing public client ID is reused on the same browser; enter it if missing.
-4. Authorize with the same Google account. Create a disposable document named **My Office — connection test**.
-5. Enter English and Arabic text, headings, bold, italic, underline and simple bullets. Click **Save to Drive** and wait for **Saved in Google Drive**.
-6. Refresh, reconnect, select **Open → Open from Google Drive**, and reopen the test document. Confirm text and supported formatting survived. Make another edit, Save, then check in Google Docs independently.
+## Official references
 
-Saved files are **native Google Docs in My Drive root**, marked with a private application property; existing library sources and Library_Metadata.json are not modified. The picker lists only documents created by this workspace. Pinning, scratchpad notes and unsaved local drafts remain session-only. No autosave, existing-document import, cloud research integration or export is implied.
-
-This first connection supports basic paragraphs, three heading levels, bold, italic, underline, simple bullets and paragraph direction. Complex documents (tables, multiple tabs, links, images, suggestions, headers/footers/footnotes) are rejected rather than flattened. Editing these is deferred to Google Docs. Supported-format drafts are limited to 100,000 characters and bounded formatting requests.
-
-Saving uses Google Docs revision guards. If the cloud revision differs, save a new document to preserve both versions. Network/API errors retain the local draft. A file ID returned during creation is retained for retry instead of blindly creating another file. If creation succeeds but its response is lost, inspect Drive before retrying; do not assume no file was created. Save is explicit; wait for success before leaving. Session expiry requires reconnecting and never stores an access token.
-
-References: [Drive scopes](https://developers.google.com/workspace/drive/api/guides/api-specific-auth), [Docs batch updates and write control](https://developers.google.com/workspace/docs/api/reference/rest/v1/documents/batchUpdate).
-
-## Notes & Projects v0.6
-
-The existing Cloud setup already includes the required `drive.readonly` and `drive.file` scopes. No new API or broader full-Drive write scope is required.
-
-1. Open Library and Connect Drive normally; Notes/Projects load existing data in read-only mode.
-2. In Notes or Projects choose **Enable saving**, then **Connect & enable saving**. Select the same Google account as the library and review Google's permissions.
-3. Create a test note, choose a source/page, and Save to Drive. Create a project and link the note and source.
-4. Refresh Drive; reopen both and verify content/links. Refresh the browser, reconnect and verify again.
-5. Edit the test note, Save to Drive, refresh and verify the latest text. Imported original notes use Create editable copy; they are not overwritten.
-
-Research saves are separate append-only Drive event files compatible with the existing research bridge; source PDFs and Library_Metadata.json are never changed. A damaged/unreadable history disables saving. Conflicting branches remain in Drive and are flagged; conflict resolution and deletion are outside this first research release. If a network error leaves the save uncertain, refresh and check before retrying.
-
-
-## Book uploads v0.7
-
-No new Cloud API or full-Drive write scope is required. Connect Drive, open My Books → Add book → Enable uploads if prompted. Reopen Add book, choose PDF/EPUB (up to 200 MB), enter title/author/category and upload. The app creates My Office Books at Drive root on first use and automatically reads its contents thereafter. It does not write to the legacy Library_Metadata.json. The existing Apps Script app will not automatically discover this separate folder unless separately configured there.
-
-Check the card and PDF reader, refresh Drive and verify the metadata. Reload/reconnect and verify again. Repeat with EPUB (opens through Drive; no in-library EPUB reader is claimed). On an interrupted upload, keep the page open and choose Check & resume. If the page is reloaded, check Drive before uploading a second copy. A duplicate-title/format guard requires explicit opt-in for a separate copy.
+- [Create a Google API client ID](https://developers.google.com/identity/oauth2/web/guides/get-google-api-clientid)
+- [Google Identity token model](https://developers.google.com/identity/oauth2/web/guides/use-token-model)
+- [Drive scopes](https://developers.google.com/workspace/drive/api/guides/api-specific-auth)
+- [Drive search](https://developers.google.com/workspace/drive/api/guides/search-files)
+- [Docs batch updates and revision control](https://developers.google.com/workspace/docs/api/reference/rest/v1/documents/batchUpdate)
