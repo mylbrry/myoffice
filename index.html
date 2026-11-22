@@ -6,8 +6,9 @@
   <meta name="color-scheme" content="dark light">
   <meta name="description" content="Ayman’s Library — a personal space for reading, thinking and writing.">
   <title>Ayman’s Library</title>
-  <link rel="stylesheet" href="styles.css?v=0.3">
-  <script src="app.js?v=0.3" defer></script>
+  <link rel="stylesheet" href="styles.css?v=0.9">
+  <script src="portal-model.js?v=0.9" defer></script>
+  <script src="app.js?v=0.9" defer></script>
 </head>
 <body>
   <header class="page-header">
@@ -38,10 +39,15 @@
           </select>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
         </div>
-        <button class="enter-button" type="submit">Enter</button>
-        <p id="connection-status" class="connection-status" role="status">Interface preview · No password required.</p>
+        <label for="portal-password">Password</label>
+        <input id="portal-password" name="password" type="password" autocomplete="current-password" required aria-describedby="connection-status">
+        <button class="enter-button" type="submit" disabled>Enter</button>
+        <p id="connection-status" class="connection-status" role="status">Preparing secure Google connection…</p>
+      <p class="connection-note">Your private password file and books stay in Google Drive. Enter connects Google when needed.</p>
+        <details class="portal-config"><summary>Connection settings</summary><label for="portal-client">Web client ID</label><input id="portal-client" autocomplete="off" spellcheck="false"><label for="portal-folder">Library folder URL or ID (optional)</label><input id="portal-folder" autocomplete="off"><label for="portal-password-file">Password file URL or ID (optional)</label><input id="portal-password-file" autocomplete="off"></details>
       </form>
     </section>
   </main>
+<section id="portal-shell" hidden aria-label="Connected workspace"><header class="session-bar"><button id="portal-home">Portal</button><span id="session-space"></span><span id="session-state" role="status">Google connected</span><button id="portal-lock">Lock</button></header><iframe id="workspace-frame" title="My Office workspace" referrerpolicy="same-origin"></iframe></section>
 </body>
 </html>
