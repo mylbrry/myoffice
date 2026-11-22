@@ -2,6 +2,18 @@
 
 Static GitHub Pages portal, Library and Writing Workspace. Durable user content stays in Google Drive. The public repository contains no private catalogue, account password, client secret or access token.
 
+## Prepared v0.9 — Portal session
+
+The Portal now has a password field. Enter performs the existing Google authorization when needed, reads the private password file from the selected My Library folder (or the explicitly configured file URL/ID), and opens a same-origin workspace frame. Library and Writer inherit the same page-memory authorization. No separate Connect Drive button is required in the normal entry flow. Direct workspace URLs return to the Portal.
+
+Google authorization protects the Drive files. The password is an additional browser UI gate, **not server-side authentication equivalent to Apps Script**. A static GitHub Pages application cannot make a client-side comparison a server authorization boundary. Password text and tokens are never persisted, published or embedded in URLs. Missing/empty/ambiguous password files fail closed; there is no fallback password.
+
+The parent Portal document stays loaded during workspace navigation. Returning to Portal preserves the current frame until a different workspace is selected or Lock is used. Reauthorization can resume the same writer draft. A full browser reload/new tab loses the in-memory token and requires Enter again. Google may display its own account/consent flow, especially on first use or expiry. Long-lived automatic refresh without user interaction requires a different backend authorization architecture.
+
+Signed-out Library sample rendering is removed and starter writing sample documents are removed. The original catalogue and saved workspace documents are loaded from Drive after entry. Configuration stores only public client ID, folder ID and optional password-file ID. No existing Drive file, password or sharing is changed.
+
+Status: local synthetic wrong/correct password, inherited Library/Writer connection, return/resume and Lock tests pass. The available Drive connector and original-account Drive UI did not locate a Password file; owner identification of the actual file is pending. Keep this change separate from production until the file is identified and live entry is verified.
+
 ## Release v0.8 — connected workspace
 
 - **Books:** load existing library metadata and enabled additional folders; upload PDF/EPUB up to 200 MB into My Office Books. Edit title, author, category, tags and favorites through separate catalogue records.

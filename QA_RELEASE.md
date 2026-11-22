@@ -26,3 +26,7 @@ Performed on disposable QA objects, preserving original books and Library_Metada
 ## Limits and acceptance
 
 These are internal checks in the available Chrome session, not a claim of exhaustive cross-browser or accessibility certification. Owner manual acceptance in preferred browsers remains a separate next step. OCR, full-library content indexing, parallel reading and speech are outside this release. DOCX import is text only. Advanced native document structures are opened in Google Docs rather than edited here. Save is manual for writing and scratchpad; reader positions save when Library saving is enabled. QA records remain identifiable and can be archived; no original data was deleted.
+
+## Prepared Portal v0.9
+
+Local synthetic transport verifies wrong-password rejection, password-file matching, inherited live Library/Writer sessions, Portal return/resume, Lock, and absence of signed-out sample catalogue/starter documents. Existing five service/model suites plus portal.test.cjs pass. Tests use a known fake password in unpublished fixtures only. Actual password contents were not read through model-visible tools. The password file was not located by available Drive metadata search or original-account Drive title search. Live password entry remains blocked on identifying that file; this version must remain separate from production until resolved.

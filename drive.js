@@ -56,6 +56,7 @@
   function disconnect(){// Drops this page's access immediately; does not alter Drive files or sharing.
     clearSession();tokenClient=null;
   }
+  async function adoptSession(session){if(!session?.token||Number(session.expiresAt)<=Date.now()||!session.scopes?.includes(readScope)||!session.scopes?.includes(writeScope))throw Error('Enter through the Portal to connect your library.');clearSession();config={...config,...session.config};token=session.token;expiresAt=Number(session.expiresAt);writable=true;expiryTimer=setTimeout(()=>clearSession('expired'),Math.max(0,expiresAt-Date.now()));await refresh();}
   addEventListener('pagehide',()=>clearSession('disconnected'));
-  window.MyLibraryDrive=Object.freeze({state,saveConfig,loadSdk,connect,refresh,pdf,saveResearch,uploadBook,resumeUpload,hasPendingUpload,disconnect,subscribe(fn){listeners.add(fn);return ()=>listeners.delete(fn);}});
+  window.MyLibraryDrive=Object.freeze({state,saveConfig,loadSdk,connect,refresh,pdf,saveResearch,uploadBook,resumeUpload,hasPendingUpload,disconnect,adoptSession,subscribe(fn){listeners.add(fn);return ()=>listeners.delete(fn);}});
 })();
